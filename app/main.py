@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 
+from app.database.database import engine
+import app.database.models
+from app.database.database import Base, engine
+
 app = FastAPI(
     title="MoneyMentor AI",
     description="""
@@ -9,7 +13,8 @@ app = FastAPI(
     """,
     version="1.0.0",
 )
-
+# Create all database tables
+Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def home():
