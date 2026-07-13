@@ -1,7 +1,6 @@
 from fastapi import FastAPI
+from app.api.expense import router as expense_router
 
-from app.database.database import engine
-import app.database.models
 from app.database.database import Base, engine
 
 app = FastAPI(
@@ -13,13 +12,12 @@ app = FastAPI(
     """,
     version="1.0.0",
 )
+app.include_router(expense_router)
 # Create all database tables
 Base.metadata.create_all(bind=engine)
 
-@app.get("/")
+@app.get("/", tags=["Home"])
 def home():
     return {
-        "project": "MoneyMentor AI",
-        "message": "Application is running successfully.",
-        "version": "1.0.0"
+        "message": "MoneyMentor AI Backend is running."
     }
