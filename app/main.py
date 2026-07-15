@@ -1,7 +1,14 @@
 from fastapi import FastAPI
+
 from app.api.expense import router as expense_router
+from app.api.user import router as user_router
 
 from app.database.database import Base, engine
+
+# Import models so SQLAlchemy knows about them
+from app.models.expense import Expense
+from app.models.user import User
+
 
 app = FastAPI(
     title="MoneyMentor AI",
@@ -12,9 +19,14 @@ app = FastAPI(
     """,
     version="1.0.0",
 )
+
+# Register Routers
 app.include_router(expense_router)
-# Create all database tables
+app.include_router(user_router)
+
+# Create Database Tables
 Base.metadata.create_all(bind=engine)
+
 
 @app.get("/", tags=["Home"])
 def home():
