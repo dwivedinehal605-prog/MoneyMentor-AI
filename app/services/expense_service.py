@@ -8,14 +8,29 @@ from app.schemas.expense import ExpenseCreate, ExpenseUpdate
 def get_expense_by_id(db: Session, expense_id: int):
     return db.query(Expense).filter(Expense.id == expense_id).first()
 
+def get_user_expense_by_id(
+    db: Session,
+    expense_id: int,
+    user_id: int
+):
+    return (
+        db.query(Expense)
+        .filter(
+            Expense.id == expense_id,
+            Expense.user_id == user_id
+        )
+        .first()
+    )
 
-def create_expense(db: Session, expense: ExpenseCreate):
+
+def create_expense(db: Session, expense: ExpenseCreate, user_id: int):
     new_expense = Expense(
         title=expense.title,
         amount=expense.amount,
-        category=expense.category
+        category=expense.category,
+        user_id=user_id
     )
-
+    
     try:
         db.add(new_expense)
         db.commit()
@@ -27,12 +42,24 @@ def create_expense(db: Session, expense: ExpenseCreate):
         raise
 
 
-def get_expenses(db: Session):
-    return db.query(Expense).all()
+def get_expenses(db: Session, user_id: int):
+    return (
+        db.query(Expense)
+        .filter(Expense.user_id == user_id)
+        .all()
+    )
 
-
-def update_expense(db: Session, expense_id: int, expense_data: ExpenseUpdate):
-    expense = get_expense_by_id(db, expense_id)
+def update_expense(
+    db: Session,
+    expense_id: int,
+    user_id: int,
+    expense_data: ExpenseUpdate
+):
+    expense = get_user_expense_by_id(
+        db,
+        expense_id,
+        user_id
+    )
 
     if expense is None:
         return None
@@ -50,9 +77,16 @@ def update_expense(db: Session, expense_id: int, expense_data: ExpenseUpdate):
         db.rollback()
         raise
 
-
-def delete_expense(db: Session, expense_id: int):
-    expense = get_expense_by_id(db, expense_id)
+def delete_expense(
+    db: Session,
+    expense_id: int,
+    user_id: int
+):
+    expense = get_user_expense_by_id(
+        db,
+        expense_id,
+        user_id
+    )
 
     if expense is None:
         return None
