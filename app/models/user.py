@@ -15,4 +15,8 @@ class User(Base):
 
     password = Column(String(255), nullable=False)
 
-    expenses = relationship("Expense", back_populates="owner")
+    expenses = relationship(
+        "Expense",
+        back_populates="owner",
+        cascade="all, delete"
+    )
