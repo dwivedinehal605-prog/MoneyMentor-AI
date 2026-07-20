@@ -2,13 +2,14 @@ from fastapi import FastAPI
 
 from app.api.expense import router as expense_router
 from app.api.user import router as user_router
+from app.api.income import router as income_router
 
 from app.database.database import Base, engine
 
 # Import models so SQLAlchemy knows about them
 from app.models.expense import Expense
 from app.models.user import User
-
+from app.models.income import Income
 
 app = FastAPI(
     title="MoneyMentor AI",
@@ -23,6 +24,7 @@ app = FastAPI(
 # Register Routers
 app.include_router(expense_router)
 app.include_router(user_router)
+app.include_router(income_router)
 
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
