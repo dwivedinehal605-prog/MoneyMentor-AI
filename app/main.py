@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from app.api.expense import router as expense_router
 from app.api.user import router as user_router
 from app.api.income import router as income_router
+from app.api.analytics import router as analytics_router
 
 from app.database.database import Base, engine
 
@@ -25,6 +26,7 @@ app = FastAPI(
 app.include_router(expense_router)
 app.include_router(user_router)
 app.include_router(income_router)
+app.include_router(analytics_router)
 
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
