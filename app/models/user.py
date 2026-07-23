@@ -21,7 +21,12 @@ class User(Base):
         cascade="all, delete"
     )
     incomes = relationship(
-    "Income",
-    back_populates="user",
-    cascade="all, delete-orphan"
-)
+        "Income",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    budgets = relationship(
+        "Budget",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
