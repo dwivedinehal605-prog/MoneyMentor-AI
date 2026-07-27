@@ -5,6 +5,7 @@ from app.api.user import router as user_router
 from app.api.income import router as income_router
 from app.api.analytics import router as analytics_router
 from app.api.budget import router as budget_router
+from app.api.insights import router as insights_router
 
 from app.database.database import Base, engine
 
@@ -13,6 +14,8 @@ from app.models.expense import Expense
 from app.models.user import User
 from app.models.income import Income
 from app.models.budget import Budget
+ 
+
 
 app = FastAPI(
     title="MoneyMentor AI",
@@ -30,6 +33,7 @@ app.include_router(user_router)
 app.include_router(income_router)
 app.include_router(analytics_router)
 app.include_router(budget_router)
+app.include_router(insights_router) 
 
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
