@@ -42,11 +42,14 @@ class ExpenseUpdate(BaseModel):
     )
 
 
+from datetime import datetime
+
 class ExpenseResponse(BaseModel):
     id: int
     title: str
     amount: float
     category: str
+    created_at: datetime
 
     class Config:
         from_attributes = True
