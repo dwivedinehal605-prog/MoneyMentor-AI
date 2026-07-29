@@ -3,21 +3,41 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.dependencies.auth import get_current_user
+from app.models.expense import Expense
+from app.models.income import Income
 from app.models.user import User
-from app.services.insight_service import generate_financial_insights
+from app.schemas.insights import FinancialInsightResponse
+from app.services.insights_service import generate_financial_insights
 
 router = APIRouter(
     prefix="/insights",
-    tags=["Insights"]
+    tags=["Insights"],
 )
 
 
-@router.get("/summary")
+@router.get(
+    "/summary",
+    response_model=FinancialInsightResponse,
+)
 def get_financial_insights(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    return generate_financial_insights(
-        db=db,
-        user_id=current_user.id
+    incomes = (
+        db.query(Income)
+        .filter(Income.user_id == current_user.id)
+        .all()
     )
+
+    expenses = (
+        db.query(Expense)
+        .filter(Expense.user_id == current_user.id)
+        .all()
+    )
+
+    insights = generate_financial_insights(
+        incomes,
+        expenses,
+    )
+
+    return FinancialInsightResponse(**insights)

@@ -7,6 +7,7 @@ from app.api.analytics import router as analytics_router
 from app.api.budget import router as budget_router
 from app.api.insights import router as insights_router
 from app.api.prediction import router as prediction_router
+from app.api.insights import router as insights_router
 
 from app.database.database import Base, engine
 
@@ -36,6 +37,7 @@ app.include_router(analytics_router)
 app.include_router(budget_router)
 app.include_router(insights_router)
 app.include_router(prediction_router) 
+app.include_router(insights_router)
 
 # Create Database Tables
 Base.metadata.create_all(bind=engine)
