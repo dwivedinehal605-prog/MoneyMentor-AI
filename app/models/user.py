@@ -18,13 +18,15 @@ class User(Base):
     expenses = relationship(
         "Expense",
         back_populates="owner",
-        cascade="all, delete"
+        cascade="all, delete-orphan"
     )
+
     incomes = relationship(
         "Income",
         back_populates="user",
         cascade="all, delete-orphan"
     )
+
     budgets = relationship(
         "Budget",
         back_populates="user",
