@@ -1,40 +1,20 @@
 from collections import defaultdict
 
-from sklearn.linear_model import LinearRegression
 import numpy as np
+from sklearn.linear_model import LinearRegression
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
-
-def train_prediction_model(expenses):
-    """
-    Train a Linear Regression model using expense amounts.
-    """
-
-    if len(expenses) < 2:
-        return None
-
-    X = np.array(range(len(expenses))).reshape(-1, 1)
-    y = np.array(expenses)
-
-    model = LinearRegression()
-    model.fit(X, y)
-
-    return model
-
-
-def predict_next_expense(model, total_expenses):
-    """
-    Predict the next expense amount.
-    """
-
-    next_index = np.array([[total_expenses]])
-    prediction = model.predict(next_index)
-
-    return float(prediction[0])
+from app.models.budget import Budget
+from app.models.expense import Expense
+from app.models.income import Income
 
 
 def predict_monthly_expense(expenses):
     """
-    Predict next month's total expense.
+    Predict the next month's
+    total expense using
+    historical monthly totals.
     """
 
     if len(expenses) < 2:
@@ -43,20 +23,268 @@ def predict_monthly_expense(expenses):
     monthly_totals = defaultdict(float)
 
     for expense in expenses:
-        month = expense.created_at.strftime("%Y-%m")
+
+        month = expense.created_at.strftime(
+            "%Y-%m"
+        )
+
         monthly_totals[month] += expense.amount
 
-    totals = list(monthly_totals.values())
+    sorted_months = sorted(
+        monthly_totals.keys()
+    )
+
+    totals = [
+        monthly_totals[month]
+        for month in sorted_months
+    ]
 
     if len(totals) < 2:
         return None
 
-    X = np.arange(len(totals)).reshape(-1, 1)
-    y = np.array(totals)
+    X = np.arange(
+        len(totals),
+        dtype=np.float64,
+    ).reshape(-1, 1)
+
+    y = np.array(
+        totals,
+        dtype=np.float64,
+    )
 
     model = LinearRegression()
     model.fit(X, y)
 
-    prediction = model.predict([[len(totals)]])
+    next_month = np.array(
+        [[len(totals)]],
+        dtype=np.float64,
+    )
 
-    return round(float(prediction[0]), 2)
+    prediction = model.predict(
+        next_month
+    )
+
+    return round(
+        float(prediction[0]),
+        2,
+    )
+
+
+def monthly_financial_forecast(
+    db: Session,
+    user_id: int,
+):
+    """
+    Generate a monthly financial forecast
+    based on the user's income,
+    expenses, budget, and predicted
+    future spending.
+    """
+
+    # =====================================
+    # Total Income
+    # =====================================
+
+    total_income = (
+        db.query(
+            func.coalesce(
+                func.sum(Income.amount),
+                0,
+            )
+        )
+        .filter(
+            Income.user_id == user_id
+        )
+        .scalar()
+    )
+
+    # =====================================
+    # Expense Records
+    # =====================================
+
+    expenses = (
+        db.query(Expense)
+        .filter(
+            Expense.user_id == user_id
+        )
+        .order_by(
+            Expense.created_at.asc()
+        )
+        .all()
+    )
+
+    total_expense = (
+        db.query(
+            func.coalesce(
+                func.sum(Expense.amount),
+                0,
+            )
+        )
+        .filter(
+            Expense.user_id == user_id
+        )
+        .scalar()
+    )
+
+    # =====================================
+    # Machine Learning Prediction
+    # =====================================
+
+
+    predicted_expense = predict_monthly_expense(
+        expenses
+    )
+
+    if predicted_expense is None:
+        predicted_expense = total_expense
+    
+    predicted_expense = max(
+        predicted_expense,
+        0,
+    )
+    # =====================================
+    # Latest Budget
+    # =====================================
+
+    latest_budget = (
+        db.query(Budget)
+        .filter(
+            Budget.user_id == user_id
+        )
+        .order_by(
+            Budget.year.desc(),
+            Budget.month.desc(),
+        )
+        .first()
+    )
+
+    budget_amount = (
+        latest_budget.budget_amount
+        if latest_budget
+        else 0
+    )
+
+    remaining_budget = (
+        budget_amount -
+        predicted_expense
+    )
+
+    remaining_budget = round(
+    remaining_budget,
+    2,
+  )
+
+    predicted_savings = (
+        total_income -
+        predicted_expense
+    )
+
+    predicted_savings = round(
+        predicted_savings,
+        2,
+    )
+
+    if predicted_savings >= 0:
+        savings_status = (
+            f"You are projected to save approximately ₹{predicted_savings:.2f} this month."
+    )
+    else:
+        savings_status = (
+            f"You are projected to have a deficit of ₹{abs(predicted_savings):.2f} this month. "
+            "Consider reducing discretionary expenses or increasing your income."
+       )
+    # =====================================
+    # Forecast Message
+    # =====================================
+
+    if total_income == 0:
+
+        if budget_amount == 0:
+
+            forecast = (
+                "No income records or monthly budget found. "
+                "Add your income and create a budget to receive "
+                "accurate financial forecasts."
+            )
+
+        elif predicted_expense <= budget_amount:
+
+            forecast = (
+                
+                "No income records found. Add your monthly income to receive accurate savings forecasts. Based on your current spending, you are expected to remain within your budget."
+            )
+
+        else:
+
+            forecast = (
+                "No income records found. Add your income to receive "
+                "more accurate financial forecasts. "
+                "Based on your current spending pattern, "
+                "you may exceed your monthly budget."
+            )
+
+    else:
+
+        if budget_amount == 0:
+
+            forecast = (
+                "No monthly budget has been set. "
+                "Create a monthly budget to improve "
+                "your financial planning."
+            )
+
+        elif predicted_expense <= budget_amount:
+
+            forecast = (
+                f"Excellent! Based on your spending pattern, "
+                f"you are likely to stay within your monthly budget. "
+                f"You are expected to have approximately "
+                f"₹{remaining_budget:.2f} remaining."
+            )
+
+        else:
+
+            over_budget = abs(
+                remaining_budget
+            )
+
+            forecast = (
+                f"Warning! Based on your spending trend, "
+                f"you may exceed your monthly budget by "
+                f"approximately ₹{over_budget:.2f}. "
+                f"Consider reducing discretionary expenses "
+                f"or increasing your monthly income."
+            )
+
+    # =====================================
+    # Response
+    # =====================================
+
+    return {
+        "total_income": round(
+            total_income,
+            2,
+       ),
+        "total_expense": round(
+            total_expense,
+            2,
+        ),
+        "predicted_expense": round(
+            predicted_expense,
+            2,
+       ),
+        "predicted_savings": round(
+            predicted_savings,
+            2,
+        ),
+        "savings_status": savings_status,
+        "budget": round(
+            budget_amount,
+            2,
+       ),
+        "remaining_budget": round(
+            remaining_budget,
+            2,
+       ),
+       "forecast": forecast,
+  }
