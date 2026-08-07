@@ -15,13 +15,12 @@ from app.api.recommendation import router as recommendation_router
 # Database
 from app.database.database import Base, engine
 
-# Import models so SQLAlchemy creates all tables
+# Models
 from app.models.user import User
 from app.models.expense import Expense
 from app.models.income import Income
 from app.models.budget import Budget
 from app.models.savings_goal import SavingsGoal
-
 
 app = FastAPI(
     title="MoneyMentor AI",
@@ -48,23 +47,14 @@ MoneyMentor AI is an AI-powered personal finance management platform that helps 
 # ==========================
 
 app.include_router(user_router)
-
 app.include_router(expense_router)
-
 app.include_router(income_router)
-
 app.include_router(analytics_router)
-
 app.include_router(insights_router)
-
 app.include_router(prediction_router)
-
 app.include_router(dashboard_router)
-
 app.include_router(budget_router)
-
 app.include_router(savings_goal_router)
-
 app.include_router(recommendation_router)
 
 # ==========================
@@ -72,7 +62,6 @@ app.include_router(recommendation_router)
 # ==========================
 
 Base.metadata.create_all(bind=engine)
-
 
 # ==========================
 # Home Endpoint
