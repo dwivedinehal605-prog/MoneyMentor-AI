@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
+from app.schemas.income_expense_report import IncomeExpenseReportResponse
 from app.services.analytics_service import (
     get_total_expense,
     category_summary,
@@ -29,6 +30,7 @@ from app.schemas.monthly_trend import (
     MonthlyTrendResponse,
 )
 
+from app.services.income_expense_report_service import get_income_expense_report
 from app.services.monthly_trend_service import (
     get_monthly_trend,
 )
@@ -44,6 +46,39 @@ from app.schemas.top_categories import (
 from app.services.top_categories_service import (
     get_top_categories,
 )
+
+from app.schemas.monthly_report import (
+    MonthlyReportResponse,
+)
+
+from app.services.monthly_report_service import (
+    get_monthly_report,
+)
+
+from app.schemas.savings_summary import (
+    SavingsSummaryResponse,
+)
+
+from app.services.savings_summary_service import (
+    get_savings_summary,
+)
+
+from app.schemas.financial_health_report import (
+    FinancialHealthReportResponse,
+)
+
+from app.services.financial_health_report_service import (
+    get_financial_health_report,
+)
+
+from app.schemas.expense_category_report import (
+    ExpenseCategoryReportResponse,
+)
+
+from app.services.expense_category_report_service import (
+    get_expense_category_report,
+)
+
 
 router = APIRouter(
     prefix="/analytics",
@@ -134,3 +169,80 @@ def top_categories(
     )
 
 print("Analytics router loaded")
+
+@router.get(
+    "/monthly-report",
+    response_model=MonthlyReportResponse,
+)
+def monthly_report(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    return get_monthly_report(
+        db=db,
+        user_id=current_user.id,
+    )
+
+@router.get(
+    "/income-expense-report",
+    response_model=IncomeExpenseReportResponse,
+)
+def income_expense_report(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    return get_income_expense_report(
+        db=db,
+        user_id=current_user.id,
+    )
+
+@router.get(
+    "/savings-summary",
+    response_model=SavingsSummaryResponse,
+)
+def savings_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    return get_savings_summary(
+        db=db,
+        user_id=current_user.id,
+    )
+
+@router.get(
+    "/financial-health-report",
+    response_model=FinancialHealthReportResponse,
+)
+def financial_health_report(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    return get_financial_health_report(
+        db=db,
+        user_id=current_user.id,
+    )
+
+@router.get(
+    "/expense-category-report",
+    response_model=ExpenseCategoryReportResponse,
+)
+def expense_category_report(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    ),
+):
+    return (
+        get_expense_category_report(
+            db=db,
+            user_id=current_user.id,
+        )
+    )
