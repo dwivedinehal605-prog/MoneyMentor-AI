@@ -11,6 +11,7 @@ from app.api.dashboard import router as dashboard_router
 from app.api.budget import router as budget_router
 from app.api.savings_goal import router as savings_goal_router
 from app.api.recommendation import router as recommendation_router
+from app.api.report import router as report_router
 
 # Database
 from app.database.database import Base, engine
@@ -56,6 +57,9 @@ app.include_router(dashboard_router)
 app.include_router(budget_router)
 app.include_router(savings_goal_router)
 app.include_router(recommendation_router)
+app.include_router(report_router)
+app.include_router(report_router)
+
 
 # ==========================
 # Create Database Tables
