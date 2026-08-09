@@ -12,6 +12,7 @@ from app.api.budget import router as budget_router
 from app.api.savings_goal import router as savings_goal_router
 from app.api.recommendation import router as recommendation_router
 from app.api.report import router as report_router
+from app.api.chart import router as chart_router
 
 # Database
 from app.database.database import Base, engine
@@ -59,6 +60,7 @@ app.include_router(savings_goal_router)
 app.include_router(recommendation_router)
 app.include_router(report_router)
 app.include_router(report_router)
+app.include_router(chart_router)
 
 
 # ==========================
