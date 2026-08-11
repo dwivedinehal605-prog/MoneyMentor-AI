@@ -24,9 +24,6 @@ from app.services.pdf_report_service import (
     generate_pdf_report,
 )
 
-from fastapi.responses import (
-    StreamingResponse,
-)
 
 from app.services.csv_report_service import (
     generate_csv_report,
