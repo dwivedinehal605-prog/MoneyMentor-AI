@@ -56,7 +56,16 @@ def report_summary(
 
 @router.get(
     "/pdf",
+    responses={
+        200: {
+            "content": {
+                "application/pdf": {}
+            },
+            "description": "PDF financial report",
+        }
+    },
 )
+
 def export_pdf_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(
@@ -91,7 +100,16 @@ def export_pdf_report(
 
 @router.get(
     "/csv",
+    responses={
+        200: {
+            "content": {
+                "text/csv": {}
+            },
+            "description": "CSV financial report",
+        }
+    },
 )
+
 def export_csv_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(

@@ -60,7 +60,6 @@ app.include_router(budget_router)
 app.include_router(savings_goal_router)
 app.include_router(recommendation_router)
 app.include_router(report_router)
-app.include_router(report_router)
 app.include_router(chart_router)
 app.include_router(notification_router)
 
