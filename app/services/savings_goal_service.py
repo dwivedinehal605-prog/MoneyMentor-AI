@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -136,6 +138,9 @@ def delete_goal(
     }
 
 
+from datetime import date
+
+
 def goal_progress(
     db: Session,
     goal_id: int,
@@ -147,6 +152,10 @@ def goal_progress(
         user_id=user_id,
     )
 
+    # -------------------------------
+    # Basic Progress
+    # -------------------------------
+
     progress_percentage = (
         (goal.saved_amount / goal.target_amount) * 100
         if goal.target_amount > 0
@@ -157,17 +166,95 @@ def goal_progress(
         goal.target_amount - goal.saved_amount
     )
 
-    if progress_percentage >= 100:
-        status_text = "Goal Achieved"
+    # -------------------------------
+    # Deadline Analysis
+    # -------------------------------
 
-    elif progress_percentage >= 80:
-        status_text = "Almost Complete"
+    today = date.today()
 
-    elif progress_percentage >= 50:
-        status_text = "On Track"
+    days_remaining = (
+        goal.deadline - today
+    ).days
+
+    # -------------------------------
+    # Required Monthly Saving
+    # -------------------------------
+
+    if days_remaining > 0 and remaining_amount > 0:
+
+        months_remaining = max(
+            days_remaining / 30,
+            1,
+        )
+
+        required_monthly_saving = (
+            remaining_amount /
+            months_remaining
+        )
 
     else:
-        status_text = "Started"
+        required_monthly_saving = 0
+
+    # -------------------------------
+    # Goal Status
+    # -------------------------------
+
+    if remaining_amount <= 0:
+
+        status_text = "Goal Achieved"
+
+        recommendation = (
+            "Congratulations! You have achieved "
+            "your savings goal. Consider setting "
+            "a new financial goal."
+        )
+
+    elif days_remaining <= 0:
+
+        status_text = "Deadline Passed"
+
+        recommendation = (
+            f"Your goal deadline has passed with "
+            f"₹{remaining_amount:.2f} remaining. "
+            "Consider extending the deadline and "
+            "creating a realistic savings plan."
+        )
+
+    elif progress_percentage >= 80:
+
+        status_text = "Almost Complete"
+
+        recommendation = (
+            f"You are {progress_percentage:.2f}% "
+            "towards your goal. Stay consistent "
+            f"and save approximately ₹"
+            f"{required_monthly_saving:.2f} per month "
+            "to complete it."
+        )
+
+    elif progress_percentage >= 50:
+
+        status_text = "On Track"
+
+        recommendation = (
+            f"Good progress! You have completed "
+            f"{progress_percentage:.2f}% of your goal. "
+            f"Try saving approximately ₹"
+            f"{required_monthly_saving:.2f} per month "
+            "to reach your target."
+        )
+
+    else:
+
+        status_text = "Needs Attention"
+
+        recommendation = (
+            f"You have completed only "
+            f"{progress_percentage:.2f}% of your goal. "
+            f"You need to save approximately ₹"
+            f"{required_monthly_saving:.2f} per month "
+            "to reach your target."
+        )
 
     return {
         "title": goal.title,
@@ -187,5 +274,12 @@ def goal_progress(
             progress_percentage,
             2,
         ),
+        "deadline": goal.deadline,
+        "days_remaining": days_remaining,
+        "required_monthly_saving": round(
+            required_monthly_saving,
+            2,
+        ),
         "status": status_text,
+        "recommendation": recommendation,
     }
