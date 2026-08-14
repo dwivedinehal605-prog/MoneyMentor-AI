@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.models.expense import Expense
 from app.models.budget import Budget
@@ -12,7 +12,10 @@ def get_notifications(
 ):
     notifications = []
 
+    # =====================================
     # Total Expense
+    # =====================================
+
     total_expense = (
         db.query(
             func.coalesce(
@@ -26,7 +29,14 @@ def get_notifications(
         .scalar()
     )
 
+    total_expense = float(
+        total_expense or 0
+    )
+
+    # =====================================
     # Latest Budget
+    # =====================================
+
     budget = (
         db.query(Budget)
         .filter(
@@ -38,30 +48,48 @@ def get_notifications(
         .first()
     )
 
+    # =====================================
     # Budget Notifications
+    # =====================================
+
     if budget:
 
-        if total_expense > budget.budget_amount:
+        budget_amount = float(
+            budget.budget_amount or 0
+        )
 
-            notifications.append(
-                {
-                    "type": "Budget Alert",
-                    "message": "You have exceeded your budget."
-                }
-            )
+        if budget_amount > 0:
 
-        elif total_expense >= (
-            budget.budget_amount * 0.8
-        ):
+            if total_expense > budget_amount:
 
-            notifications.append(
-                {
-                    "type": "Warning",
-                    "message": "You have used more than 80% of your budget."
-                }
-            )
+                notifications.append(
+                    {
+                        "type": "Budget Alert",
+                        "message": (
+                            "You have exceeded your "
+                            "monthly budget."
+                        ),
+                    }
+                )
 
+            elif total_expense >= (
+                budget_amount * 0.8
+            ):
+
+                notifications.append(
+                    {
+                        "type": "Budget Warning",
+                        "message": (
+                            "You have used more than "
+                            "80% of your monthly budget."
+                        ),
+                    }
+                )
+
+    # =====================================
     # Latest Savings Goal
+    # =====================================
+
     goal = (
         db.query(SavingsGoal)
         .filter(
@@ -73,16 +101,27 @@ def get_notifications(
         .first()
     )
 
+    # =====================================
     # Savings Goal Notifications
+    # =====================================
+
     if goal:
+
+        target_amount = float(
+            goal.target_amount or 0
+        )
+
+        saved_amount = float(
+            goal.saved_amount or 0
+        )
 
         progress = 0
 
-        if goal.target_amount > 0:
+        if target_amount > 0:
 
             progress = (
-                goal.saved_amount /
-                goal.target_amount
+                saved_amount /
+                target_amount
             ) * 100
 
         if progress >= 100:
@@ -90,7 +129,11 @@ def get_notifications(
             notifications.append(
                 {
                     "type": "Goal Completed",
-                    "message": "Congratulations! Savings goal achieved."
+                    "message": (
+                        f"Congratulations! You have "
+                        f"achieved your savings goal "
+                        f"'{goal.title}'."
+                    ),
                 }
             )
 
@@ -99,9 +142,43 @@ def get_notifications(
             notifications.append(
                 {
                     "type": "Goal Progress",
-                    "message": "You have completed over 80% of your savings goal."
+                    "message": (
+                        f"You have completed "
+                        f"{progress:.2f}% of your "
+                        f"savings goal '{goal.title}'."
+                    ),
                 }
             )
+
+        elif progress > 0:
+
+            notifications.append(
+                {
+                    "type": "Goal Progress",
+                    "message": (
+                        f"You have saved "
+                        f"{progress:.2f}% of your "
+                        f"savings goal '{goal.title}'."
+                    ),
+                }
+            )
+
+    # =====================================
+    # No Notifications
+    # =====================================
+
+    if not notifications:
+
+        notifications.append(
+            {
+                "type": "Financial Update",
+                "message": (
+                    "Your finances are currently "
+                    "on track. Keep monitoring your "
+                    "spending and savings."
+                ),
+            }
+        )
 
     return {
         "notifications": notifications

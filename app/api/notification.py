@@ -1,22 +1,15 @@
-from fastapi import APIRouter
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-
-from app.dependencies.auth import (
-    get_current_user,
-)
+from app.database.database import get_db
+from app.dependencies.auth import get_current_user
 
 from app.models.user import User
 
-from app.schemas.notification import (
-    NotificationResponse,
-)
+from app.schemas.notification import NotificationResponse
 
-from app.services.notification_service import (
-    get_notifications,
-)
+from app.services.notification_service import get_notifications
+
 
 router = APIRouter(
     prefix="/notifications",
