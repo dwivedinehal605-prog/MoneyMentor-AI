@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -87,6 +89,109 @@ def get_notifications(
                 )
 
     # =====================================
+    # Expense Records
+    # =====================================
+
+    expenses = (
+        db.query(Expense)
+        .filter(
+            Expense.user_id == user_id
+        )
+        .order_by(
+            Expense.created_at.desc()
+        )
+        .all()
+    )
+
+    # =====================================
+    # High Expense Notification
+    # =====================================
+
+    if expenses:
+
+        highest_expense = max(
+            expenses,
+            key=lambda expense: expense.amount,
+        )
+
+        # High expense threshold:
+        # 50% of total recorded expenses
+        if (
+            total_expense > 0
+            and highest_expense.amount
+            >= total_expense * 0.5
+        ):
+
+            notifications.append(
+                {
+                    "type": "High Expense Alert",
+                    "message": (
+                        f"Your largest expense was "
+                        f"₹{highest_expense.amount:.2f} "
+                        f"for '{highest_expense.title}'. "
+                        "Review this expense to maintain "
+                        "better spending control."
+                    ),
+                }
+            )
+
+    # =====================================
+    # Monthly Spending Trend
+    # =====================================
+
+    monthly_totals = defaultdict(float)
+
+    for expense in expenses:
+
+        month = expense.created_at.strftime(
+            "%Y-%m"
+        )
+
+        monthly_totals[month] += expense.amount
+
+    months = sorted(
+        monthly_totals.keys()
+    )
+
+    if len(months) >= 2:
+
+        previous_month = monthly_totals[
+            months[-2]
+        ]
+
+        current_month = monthly_totals[
+            months[-1]
+        ]
+
+        if previous_month > 0:
+
+            change_percentage = (
+                (
+                    current_month
+                    - previous_month
+                )
+                / previous_month
+            ) * 100
+
+            # Alert when spending increases
+            # by more than 20%
+
+            if change_percentage > 20:
+
+                notifications.append(
+                    {
+                        "type": "Spending Alert",
+                        "message": (
+                            f"Your spending increased by "
+                            f"{change_percentage:.2f}% compared "
+                            "with the previous month. "
+                            "Consider reviewing your recent "
+                            "expenses."
+                        ),
+                    }
+                )
+
+    # =====================================
     # Latest Savings Goal
     # =====================================
 
@@ -120,8 +225,8 @@ def get_notifications(
         if target_amount > 0:
 
             progress = (
-                saved_amount /
-                target_amount
+                saved_amount
+                / target_amount
             ) * 100
 
         if progress >= 100:
@@ -179,6 +284,10 @@ def get_notifications(
                 ),
             }
         )
+
+    # =====================================
+    # Final Response
+    # =====================================
 
     return {
         "notifications": notifications
