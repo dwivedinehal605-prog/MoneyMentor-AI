@@ -12,29 +12,80 @@ from app.models.income import Income
 
 def predict_monthly_expense(expenses):
     """
-    Predict next month's total expense
-    using historical monthly expense totals.
+    Predict next month's total expense using
+    historical monthly expense totals.
+
+    Uses:
+    - Average of available data when only a few
+      months are available.
+    - Linear Regression when sufficient historical
+      monthly data is available.
     """
 
-    if len(expenses) < 2:
+    if not expenses:
         return None
+
+    # =====================================
+    # Calculate Monthly Expense Totals
+    # =====================================
 
     monthly_totals = defaultdict(float)
 
     for expense in expenses:
-        month = expense.created_at.strftime("%Y-%m")
-        monthly_totals[month] += expense.amount
 
-    sorted_months = sorted(monthly_totals.keys())
+        if not expense.created_at:
+            continue
+
+        month = expense.created_at.strftime("%Y-%m")
+
+        monthly_totals[month] += float(
+            expense.amount
+        )
+
+    sorted_months = sorted(
+        monthly_totals.keys()
+    )
 
     totals = [
         monthly_totals[month]
         for month in sorted_months
     ]
 
-    # Need at least 2 months of data
-    if len(totals) < 2:
+    if not totals:
         return None
+
+    # =====================================
+    # One Month of Data
+    # =====================================
+
+    if len(totals) == 1:
+
+        return round(
+            float(totals[0]),
+            2,
+        )
+
+    # =====================================
+    # Two Months of Data
+    # =====================================
+    # With only two months, using linear
+    # regression can create an unrealistic
+    # prediction. Use the average instead.
+
+    if len(totals) == 2:
+
+        average_expense = sum(
+            totals
+        ) / len(totals)
+
+        return round(
+            float(average_expense),
+            2,
+        )
+
+    # =====================================
+    # Three or More Months
+    # =====================================
 
     X = np.arange(
         len(totals),
@@ -47,17 +98,45 @@ def predict_monthly_expense(expenses):
     )
 
     model = LinearRegression()
-    model.fit(X, y)
+
+    model.fit(
+        X,
+        y,
+    )
 
     next_month = np.array(
         [[len(totals)]],
         dtype=np.float64,
     )
 
-    prediction = model.predict(next_month)
+    prediction = model.predict(
+        next_month
+    )
+
+    predicted_amount = max(
+        float(prediction[0]),
+        0,
+    )
+
+    # =====================================
+    # Prevent Extreme Predictions
+    # =====================================
+
+    average_expense = float(
+        np.mean(totals)
+    )
+
+    maximum_reasonable_expense = (
+        average_expense * 2
+    )
+
+    predicted_amount = min(
+        predicted_amount,
+        maximum_reasonable_expense,
+    )
 
     return round(
-        float(prediction[0]),
+        predicted_amount,
         2,
     )
 
@@ -67,9 +146,9 @@ def monthly_financial_forecast(
     user_id: int,
 ):
     """
-    Generate monthly financial forecast
-    using income, expenses, budget and
-    predicted future spending.
+    Generate monthly financial forecast using
+    income, expenses, budget and predicted
+    future spending.
     """
 
     # =====================================
@@ -89,6 +168,10 @@ def monthly_financial_forecast(
         .scalar()
     )
 
+    total_income = float(
+        total_income or 0
+    )
+
     # =====================================
     # Expense Records
     # =====================================
@@ -104,6 +187,10 @@ def monthly_financial_forecast(
         .all()
     )
 
+    # =====================================
+    # Total Expense
+    # =====================================
+
     total_expense = (
         db.query(
             func.coalesce(
@@ -117,6 +204,10 @@ def monthly_financial_forecast(
         .scalar()
     )
 
+    total_expense = float(
+        total_expense or 0
+    )
+
     # =====================================
     # ML Prediction
     # =====================================
@@ -125,12 +216,21 @@ def monthly_financial_forecast(
         expenses
     )
 
+    # If prediction cannot be generated,
+    # use total expense as fallback.
+
     if predicted_expense is None:
+
         predicted_expense = total_expense
 
     predicted_expense = max(
-        predicted_expense,
+        float(predicted_expense),
         0,
+    )
+
+    predicted_expense = round(
+        predicted_expense,
+        2,
     )
 
     # =====================================
@@ -150,9 +250,11 @@ def monthly_financial_forecast(
     )
 
     budget_amount = (
-        latest_budget.budget_amount
+        float(
+            latest_budget.budget_amount
+        )
         if latest_budget
-        else 0
+        else 0.0
     )
 
     budget_amount = round(
@@ -160,8 +262,13 @@ def monthly_financial_forecast(
         2,
     )
 
+    # =====================================
+    # Remaining Budget
+    # =====================================
+
     remaining_budget = round(
-        budget_amount - predicted_expense,
+        budget_amount
+        - predicted_expense,
         2,
     )
 
@@ -170,7 +277,8 @@ def monthly_financial_forecast(
     # =====================================
 
     predicted_savings = round(
-        total_income - predicted_expense,
+        total_income
+        - predicted_expense,
         2,
     )
 
@@ -180,25 +288,34 @@ def monthly_financial_forecast(
 
     financial_score = 100
 
+    # No income
     if total_income == 0:
+
         financial_score -= 40
 
+    # Predicted expense exceeds budget
     if (
         budget_amount > 0
         and predicted_expense > budget_amount
     ):
+
         financial_score -= 20
 
+    # Predicted deficit
     if predicted_savings < 0:
+
         financial_score -= 20
 
+    # High spending ratio
     if total_income > 0:
 
         expense_ratio = (
-            total_expense / total_income
+            total_expense
+            / total_income
         )
 
         if expense_ratio > 0.80:
+
             financial_score -= 20
 
     financial_score = max(
@@ -214,15 +331,19 @@ def monthly_financial_forecast(
     # =====================================
 
     if financial_score >= 80:
+
         health_status = "Excellent"
 
     elif financial_score >= 60:
+
         health_status = "Good"
 
     elif financial_score >= 40:
+
         health_status = "Average"
 
     else:
+
         health_status = "Needs Improvement"
 
     # =====================================
@@ -230,13 +351,24 @@ def monthly_financial_forecast(
     # =====================================
 
     if predicted_savings > 0:
-        savings_status = "Positive Savings"
+
+        savings_status = (
+            f"You are projected to save approximately "
+            f"₹{predicted_savings:.2f} this month."
+        )
 
     elif predicted_savings == 0:
-        savings_status = "Break Even"
+
+        savings_status = (
+            "You are projected to break even this month."
+        )
 
     else:
-        savings_status = "Projected Deficit"
+
+        savings_status = (
+            f"You are projected to have a deficit of "
+            f"₹{abs(predicted_savings):.2f} this month."
+        )
 
     # =====================================
     # Recommendations
@@ -245,6 +377,7 @@ def monthly_financial_forecast(
     recommendations = []
 
     if predicted_savings < 0:
+
         recommendations.append(
             "Reduce discretionary expenses to eliminate "
             "your projected monthly deficit."
@@ -254,12 +387,14 @@ def monthly_financial_forecast(
         budget_amount > 0
         and predicted_expense > budget_amount
     ):
+
         recommendations.append(
             "Your projected expenses exceed your monthly "
             "budget. Review your largest spending categories."
         )
 
     if total_income == 0:
+
         recommendations.append(
             "Add your income records to receive more "
             "accurate financial insights."
@@ -269,12 +404,14 @@ def monthly_financial_forecast(
         total_income > 0
         and predicted_savings > 0
     ):
+
         recommendations.append(
             "Consider investing a portion of your "
             "monthly savings."
         )
 
-    if len(recommendations) == 0:
+    if not recommendations:
+
         recommendations.append(
             "Excellent financial discipline. Continue "
             "monitoring your monthly finances."
@@ -287,6 +424,7 @@ def monthly_financial_forecast(
     if total_income == 0:
 
         if budget_amount == 0:
+
             forecast = (
                 "No income records or monthly budget found. "
                 "Add your income and create a budget to "
@@ -294,6 +432,7 @@ def monthly_financial_forecast(
             )
 
         elif predicted_expense <= budget_amount:
+
             forecast = (
                 "No income records found. Add your monthly "
                 "income to receive accurate savings forecasts. "
@@ -302,6 +441,7 @@ def monthly_financial_forecast(
             )
 
         else:
+
             forecast = (
                 "No income records found. Add your income to "
                 "receive more accurate financial forecasts. "
@@ -312,12 +452,14 @@ def monthly_financial_forecast(
     else:
 
         if budget_amount == 0:
+
             forecast = (
                 "No monthly budget has been set. Create a "
                 "monthly budget to improve your financial planning."
             )
 
         elif predicted_expense <= budget_amount:
+
             forecast = (
                 f"Excellent! Based on your current financial "
                 f"trend, you are projected to stay within your "
@@ -326,13 +468,16 @@ def monthly_financial_forecast(
             )
 
         else:
-            over_budget = abs(remaining_budget)
+
+            over_budget = abs(
+                remaining_budget
+            )
 
             forecast = (
                 f"Warning! You are projected to exceed your "
-                f"monthly budget by approximately ₹{over_budget:.2f}. "
-                f"Consider reducing non-essential expenses or "
-                f"increasing your income."
+                f"monthly budget by approximately "
+                f"₹{over_budget:.2f}. Consider reducing "
+                f"non-essential expenses or increasing your income."
             )
 
     # =====================================
