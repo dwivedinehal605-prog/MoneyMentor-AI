@@ -15,6 +15,7 @@ from app.api.report import router as report_router
 from app.api.chart import router as chart_router
 from app.api.notification import router as notification_router
 from app.api.anomaly import router as anomaly_router
+from app.api.spending_insight import router as spending_insight_router
 
 # Database
 from app.database.database import Base, engine
@@ -64,6 +65,7 @@ app.include_router(report_router)
 app.include_router(chart_router)
 app.include_router(notification_router)
 app.include_router(anomaly_router)
+app.include_router(spending_insight_router)
 
 # ==========================
 # Create Database Tables
