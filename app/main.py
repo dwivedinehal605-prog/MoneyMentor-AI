@@ -17,6 +17,7 @@ from app.api.notification import router as notification_router
 from app.api.anomaly import router as anomaly_router
 from app.api.spending_insight import router as spending_insight_router
 from app.api.spending_distribution import router as spending_distribution_router
+from app.api.monthly_comparison import router as monthly_comparison_router
 
 # Database
 from app.database.database import Base, engine
@@ -68,6 +69,7 @@ app.include_router(notification_router)
 app.include_router(anomaly_router)
 app.include_router(spending_insight_router)
 app.include_router(spending_distribution_router)
+app.include_router(monthly_comparison_router)
 
 # ==========================
 # Create Database Tables
