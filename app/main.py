@@ -23,6 +23,7 @@ from app.api.expense_frequency import router as expense_frequency_router
 from app.api.expense_income_ratio import router as expense_income_ratio_router
 from app.api.monthly_savings import router as monthly_savings_router
 from app.api.expense_health_score import router as expense_health_score_router
+from app.api.financial_health_trend import router as financial_health_trend_router
 
 # Database
 from app.database.database import Base, engine
@@ -81,6 +82,7 @@ app.include_router(expense_frequency_router)
 app.include_router(expense_income_ratio_router)
 app.include_router(monthly_savings_router)
 app.include_router(expense_health_score_router)
+app.include_router(financial_health_trend_router)
 
 # ==========================
 # Create Database Tables
