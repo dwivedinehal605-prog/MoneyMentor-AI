@@ -26,6 +26,7 @@ from app.api.expense_health_score import router as expense_health_score_router
 from app.api.financial_health_trend import router as financial_health_trend_router
 from app.api.savings_health_score import router as savings_health_score_router
 from app.api.spending_efficiency import router as spending_efficiency_router
+from app.api.savings_efficiency_trend import router as savings_efficiency_trend_router
 
 # Database
 from app.database.database import Base, engine
@@ -87,6 +88,7 @@ app.include_router(expense_health_score_router)
 app.include_router(financial_health_trend_router)
 app.include_router(savings_health_score_router)
 app.include_router(spending_efficiency_router)
+app.include_router(savings_efficiency_trend_router)
 
 # ==========================
 # Create Database Tables
