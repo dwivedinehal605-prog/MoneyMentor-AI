@@ -25,6 +25,7 @@ from app.api.category_diversity import router as category_diversity_router
 from app.api.monthly_category_trend import router as monthly_category_trend_router
 from app.api.category_trend_score import router as category_trend_score_router
 from app.api.category_spending_risk import router as category_spending_risk_router
+from app.api.overall_spending_risk import router as overall_spending_risk_router
 from app.api.expense_income_ratio import router as expense_income_ratio_router
 from app.api.monthly_savings import router as monthly_savings_router
 from app.api.expense_health_score import router as expense_health_score_router
@@ -101,6 +102,7 @@ app.include_router(category_diversity_router)
 app.include_router(monthly_category_trend_router)
 app.include_router(category_trend_score_router)
 app.include_router(category_spending_risk_router)
+app.include_router(overall_spending_risk_router)
 
 # ==========================
 # Create Database Tables
