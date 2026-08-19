@@ -20,6 +20,7 @@ from app.api.spending_distribution import router as spending_distribution_router
 from app.api.monthly_comparison import router as monthly_comparison_router
 from app.api.savings_rate_trend import router as savings_rate_trend_router
 from app.api.expense_frequency import router as expense_frequency_router
+from app.api.category_concentration import router as category_concentration_router
 from app.api.expense_income_ratio import router as expense_income_ratio_router
 from app.api.monthly_savings import router as monthly_savings_router
 from app.api.expense_health_score import router as expense_health_score_router
@@ -91,6 +92,7 @@ app.include_router(savings_health_score_router)
 app.include_router(spending_efficiency_router)
 app.include_router(savings_efficiency_trend_router)
 app.include_router(expense_volatility_router)
+app.include_router(category_concentration_router)
 
 # ==========================
 # Create Database Tables
