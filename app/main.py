@@ -28,6 +28,7 @@ from app.api.category_spending_risk import router as category_spending_risk_rout
 from app.api.overall_spending_risk import router as overall_spending_risk_router
 from app.api.overall_spending_efficiency import router as overall_spending_efficiency_router
 from app.api.expense_income_balance import router as expense_income_balance_router
+from app.api.savings_income_ratio import router as savings_income_ratio_router
 from app.api.expense_income_ratio import router as expense_income_ratio_router
 from app.api.monthly_savings import router as monthly_savings_router
 from app.api.expense_health_score import router as expense_health_score_router
@@ -107,6 +108,7 @@ app.include_router(category_spending_risk_router)
 app.include_router(overall_spending_risk_router)
 app.include_router(overall_spending_efficiency_router)
 app.include_router(expense_income_balance_router)
+app.include_router(savings_income_ratio_router)
 
 # ==========================
 # Create Database Tables
