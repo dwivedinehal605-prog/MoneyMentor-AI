@@ -9,13 +9,17 @@ def get_savings_summary(
     db: Session,
     user_id: int,
 ):
+    """
+    Generate a user-specific savings summary.
+
+    Calculates total income, total expenses, total savings,
+    savings rate, and savings health status.
+    """
 
     total_income = (
         db.query(
             func.coalesce(
-                func.sum(
-                    Income.amount
-                ),
+                func.sum(Income.amount),
                 0,
             )
         )
@@ -28,9 +32,7 @@ def get_savings_summary(
     total_expense = (
         db.query(
             func.coalesce(
-                func.sum(
-                    Expense.amount
-                ),
+                func.sum(Expense.amount),
                 0,
             )
         )
@@ -41,36 +43,24 @@ def get_savings_summary(
     )
 
     total_savings = (
-        total_income -
-        total_expense
+        total_income - total_expense
     )
 
     savings_rate = 0
 
     if total_income > 0:
-
         savings_rate = (
-            total_savings /
-            total_income
+            total_savings / total_income
         ) * 100
 
     if savings_rate >= 30:
-
-        status = (
-            "Healthy Savings"
-        )
+        savings_status = "Healthy Savings"
 
     elif savings_rate >= 10:
-
-        status = (
-            "Average Savings"
-        )
+        savings_status = "Average Savings"
 
     else:
-
-        status = (
-            "Low Savings"
-        )
+        savings_status = "Low Savings"
 
     return {
         "total_income": round(
@@ -89,5 +79,5 @@ def get_savings_summary(
             savings_rate,
             2,
         ),
-        "savings_status": status,
+        "savings_status": savings_status,
     }

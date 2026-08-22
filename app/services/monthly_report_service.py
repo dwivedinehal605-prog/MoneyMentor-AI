@@ -9,12 +9,19 @@ def get_monthly_report(
     db: Session,
     user_id: int,
 ):
+    """
+    Generate a financial report for the current user's
+    income, expenses, savings, and savings rate.
+
+    The report is user-specific and only includes records
+    belonging to the authenticated user.
+    """
 
     total_income = (
         db.query(
             func.coalesce(
                 func.sum(Income.amount),
-                0
+                0,
             )
         )
         .filter(
@@ -27,7 +34,7 @@ def get_monthly_report(
         db.query(
             func.coalesce(
                 func.sum(Expense.amount),
-                0
+                0,
             )
         )
         .filter(
@@ -36,18 +43,18 @@ def get_monthly_report(
         .scalar()
     )
 
-    savings = (
-        total_income -
-        total_expense
+    total_income = float(total_income or 0)
+    total_expense = float(total_expense or 0)
+
+    total_savings = (
+        total_income - total_expense
     )
 
-    savings_rate = 0
+    savings_rate = 0.0
 
     if total_income > 0:
-
         savings_rate = (
-            savings /
-            total_income
+            total_savings / total_income
         ) * 100
 
     return {
@@ -60,7 +67,7 @@ def get_monthly_report(
             2,
         ),
         "total_savings": round(
-            savings,
+            total_savings,
             2,
         ),
         "savings_rate": round(

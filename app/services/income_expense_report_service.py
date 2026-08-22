@@ -9,13 +9,20 @@ def get_income_expense_report(
     db: Session,
     user_id: int,
 ):
+    """
+    Generate a user-specific income vs expense report.
+
+    Returns:
+        total_income: Total income of the user.
+        total_expense: Total expenses of the user.
+        difference: Income minus expenses.
+        status: Surplus or Deficit.
+    """
 
     total_income = (
         db.query(
             func.coalesce(
-                func.sum(
-                    Income.amount
-                ),
+                func.sum(Income.amount),
                 0,
             )
         )
@@ -28,9 +35,7 @@ def get_income_expense_report(
     total_expense = (
         db.query(
             func.coalesce(
-                func.sum(
-                    Expense.amount
-                ),
+                func.sum(Expense.amount),
                 0,
             )
         )
@@ -40,10 +45,7 @@ def get_income_expense_report(
         .scalar()
     )
 
-    difference = (
-        total_income -
-        total_expense
-    )
+    difference = total_income - total_expense
 
     status = (
         "Surplus"
