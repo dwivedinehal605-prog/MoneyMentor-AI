@@ -1,80 +1,67 @@
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
-from app.schemas.income_expense_report import IncomeExpenseReportResponse
-from app.services.analytics_service import (
-    get_total_expense,
-    category_summary,
-)
 
+from app.schemas.income_expense_report import (
+    IncomeExpenseReportResponse,
+)
 from app.schemas.category_analytics import (
     CategoryAnalyticsResponse,
 )
-
-from app.services.category_analytics_service import (
-    get_category_analytics,
-)
-
 from app.schemas.category_insight import (
     CategoryInsightResponse,
 )
-
-from app.services.category_insight_service import (
-    get_category_insights,
-)
-
 from app.schemas.monthly_trend import (
     MonthlyTrendResponse,
 )
-
-from app.services.income_expense_report_service import get_income_expense_report
-from app.services.monthly_trend_service import (
-    get_monthly_trend,
-)
-
-from app.services.monthly_trend_service import (
-    get_monthly_trend,
-)
-
 from app.schemas.top_categories import (
     TopCategoriesResponse,
 )
-
-from app.services.top_categories_service import (
-    get_top_categories,
-)
-
 from app.schemas.monthly_report import (
     MonthlyReportResponse,
 )
-
-from app.services.monthly_report_service import (
-    get_monthly_report,
-)
-
 from app.schemas.savings_summary import (
     SavingsSummaryResponse,
 )
-
-from app.services.savings_summary_service import (
-    get_savings_summary,
-)
-
 from app.schemas.financial_health_report import (
     FinancialHealthReportResponse,
 )
-
-from app.services.financial_health_report_service import (
-    get_financial_health_report,
-)
-
 from app.schemas.expense_category_report import (
     ExpenseCategoryReportResponse,
 )
 
+from app.services.analytics_service import (
+    get_total_expense,
+    category_summary,
+)
+from app.services.category_analytics_service import (
+    get_category_analytics,
+)
+from app.services.category_insight_service import (
+    get_category_insights,
+)
+from app.services.monthly_trend_service import (
+    get_monthly_trend,
+)
+from app.services.top_categories_service import (
+    get_top_categories,
+)
+from app.services.monthly_report_service import (
+    get_monthly_report,
+)
+from app.services.income_expense_report_service import (
+    get_income_expense_report,
+)
+from app.services.savings_summary_service import (
+    get_savings_summary,
+)
+from app.services.financial_health_report_service import (
+    get_financial_health_report,
+)
 from app.services.expense_category_report_service import (
     get_expense_category_report,
 )
@@ -82,18 +69,30 @@ from app.services.expense_category_report_service import (
 
 router = APIRouter(
     prefix="/analytics",
-    tags=["Analytics"]
+    tags=["Analytics"],
 )
 
 
 @router.get("/total")
-def total(db: Session = Depends(get_db)):
-    return get_total_expense(db)
+def total(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_total_expense(
+        db=db,
+        user_id=current_user.id,
+    )
 
 
 @router.get("/category-summary")
-def summary(db: Session = Depends(get_db)):
-    return category_summary(db)
+def summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return category_summary(
+        db=db,
+        user_id=current_user.id,
+    )
 
 
 @router.get(
@@ -105,8 +104,7 @@ def category_wise_analytics(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Generate category-wise
-    expense analytics.
+    Generate category-wise expense analytics.
     """
 
     return get_category_analytics(
@@ -114,20 +112,20 @@ def category_wise_analytics(
         user_id=current_user.id,
     )
 
+
 @router.get(
     "/category-insights",
     response_model=CategoryInsightResponse,
 )
 def category_insights(
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ):
     return get_category_insights(
         db=db,
         user_id=current_user.id,
     )
+
 
 @router.get(
     "/monthly-trend",
@@ -135,13 +133,10 @@ def category_insights(
 )
 def monthly_trend(
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ):
     """
-    Generate month-wise
-    expense trend analytics.
+    Generate month-wise expense trend analytics.
     """
 
     return get_monthly_trend(
@@ -149,15 +144,14 @@ def monthly_trend(
         user_id=current_user.id,
     )
 
+
 @router.get(
     "/top-categories",
     response_model=TopCategoriesResponse,
 )
 def top_categories(
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Return top spending categories.
@@ -168,7 +162,6 @@ def top_categories(
         user_id=current_user.id,
     )
 
-print("Analytics router loaded")
 
 @router.get(
     "/monthly-report",
@@ -176,14 +169,13 @@ print("Analytics router loaded")
 )
 def monthly_report(
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ):
     return get_monthly_report(
         db=db,
         user_id=current_user.id,
     )
+
 
 @router.get(
     "/income-expense-report",
@@ -191,14 +183,13 @@ def monthly_report(
 )
 def income_expense_report(
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ):
     return get_income_expense_report(
         db=db,
         user_id=current_user.id,
     )
+
 
 @router.get(
     "/savings-summary",
@@ -206,14 +197,13 @@ def income_expense_report(
 )
 def savings_summary(
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ):
     return get_savings_summary(
         db=db,
         user_id=current_user.id,
     )
+
 
 @router.get(
     "/financial-health-report",
@@ -221,14 +211,13 @@ def savings_summary(
 )
 def financial_health_report(
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ):
     return get_financial_health_report(
         db=db,
         user_id=current_user.id,
     )
+
 
 @router.get(
     "/expense-category-report",
@@ -236,13 +225,9 @@ def financial_health_report(
 )
 def expense_category_report(
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ):
-    return (
-        get_expense_category_report(
-            db=db,
-            user_id=current_user.id,
-        )
+    return get_expense_category_report(
+        db=db,
+        user_id=current_user.id,
     )
