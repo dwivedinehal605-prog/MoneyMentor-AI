@@ -15,6 +15,9 @@ from app.schemas.savings_goal import (
 from app.schemas.goal_progress import (
     GoalProgressResponse,
 )
+from app.schemas.goal_dashboard import (
+    GoalDashboardResponse,
+)
 
 from app.services.savings_goal_service import (
     create_goal,
@@ -23,6 +26,7 @@ from app.services.savings_goal_service import (
     update_goal,
     delete_goal,
     goal_progress,
+    goal_dashboard,
 )
 
 router = APIRouter(
@@ -120,6 +124,21 @@ def get_goal_progress(
     current_user: User = Depends(get_current_user),
 ):
     return goal_progress(
+        db=db,
+        goal_id=goal_id,
+        user_id=current_user.id,
+    )
+
+@router.get(
+    "/dashboard/{goal_id}",
+    response_model=GoalDashboardResponse,
+)
+def get_goal_dashboard(
+    goal_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return goal_dashboard(
         db=db,
         goal_id=goal_id,
         user_id=current_user.id,

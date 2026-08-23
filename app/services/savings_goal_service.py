@@ -283,3 +283,101 @@ def goal_progress(
         "status": status_text,
         "recommendation": recommendation,
     }
+
+def goal_dashboard(
+    db: Session,
+    goal_id: int,
+    user_id: int,
+):
+    goal = get_goal(
+        db=db,
+        goal_id=goal_id,
+        user_id=user_id,
+    )
+
+    remaining_amount = max(
+        goal.target_amount - goal.saved_amount,
+        0,
+    )
+
+    progress_percentage = (
+        (goal.saved_amount / goal.target_amount) * 100
+        if goal.target_amount > 0
+        else 0
+    )
+
+    progress_percentage = min(
+        progress_percentage,
+        100,
+    )
+
+    today = date.today()
+
+    days_remaining = (
+        goal.deadline - today
+    ).days
+
+    if remaining_amount <= 0:
+        status_text = "Goal Achieved"
+
+        recommended_daily_saving = 0
+        recommended_monthly_saving = 0
+
+    elif days_remaining <= 0:
+        status_text = "Deadline Passed"
+
+        recommended_daily_saving = 0
+        recommended_monthly_saving = 0
+
+    else:
+        months_remaining = max(
+            days_remaining / 30,
+            1,
+        )
+
+        recommended_monthly_saving = (
+            remaining_amount / months_remaining
+        )
+
+        recommended_daily_saving = (
+            remaining_amount / days_remaining
+        )
+
+        if progress_percentage >= 80:
+            status_text = "Almost Complete"
+
+        elif progress_percentage >= 50:
+            status_text = "On Track"
+
+        else:
+            status_text = "Needs Attention"
+
+    return {
+        "title": goal.title,
+        "target_amount": round(
+            goal.target_amount,
+            2,
+        ),
+        "saved_amount": round(
+            goal.saved_amount,
+            2,
+        ),
+        "remaining_amount": round(
+            remaining_amount,
+            2,
+        ),
+        "progress_percentage": round(
+            progress_percentage,
+            2,
+        ),
+        "status": status_text,
+        "days_remaining": days_remaining,
+        "recommended_daily_saving": round(
+            recommended_daily_saving,
+            2,
+        ),
+        "recommended_monthly_saving": round(
+            recommended_monthly_saving,
+            2,
+        ),
+    }
