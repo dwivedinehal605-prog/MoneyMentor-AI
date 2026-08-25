@@ -39,6 +39,8 @@ from app.api.spending_efficiency import router as spending_efficiency_router
 from app.api.savings_efficiency_trend import router as savings_efficiency_trend_router
 from app.api.expense_volatility import router as expense_volatility_router
 from app.api.goal_recommendation import router as goal_recommendation_router
+from app.api.spending_coach import router as spending_coach_router
+
 # Database
 from app.database.database import Base, engine
 
@@ -112,6 +114,7 @@ app.include_router(expense_income_balance_router)
 app.include_router(savings_income_ratio_router)
 app.include_router(savings_coverage_router)
 app.include_router (goal_recommendation_router)
+app.include_router(spending_coach_router)
 # ==========================
 # Create Database Tables
 # ==========================
