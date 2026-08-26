@@ -5,3 +5,4 @@ from typing import List
 class FinancialActionPlanResponse(BaseModel):
     priority: str
     actions: List[str]
+    goal_actions: List[str]

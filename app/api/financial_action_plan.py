@@ -1,17 +1,13 @@
-from fastapi import APIRouter
-from fastapi import Depends
-
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-
-from app.dependencies.auth import (
-    get_current_user,
-)
+from app.dependencies.auth import get_current_user
 
 from app.models.user import User
 from app.models.expense import Expense
 from app.models.income import Income
+from app.models.savings_goal import SavingsGoal
 
 from app.schemas.financial_action_plan import (
     FinancialActionPlanResponse,
@@ -58,11 +54,20 @@ def financial_action_plan(
         .all()
     )
 
+    goals = (
+        db.query(SavingsGoal)
+        .filter(
+            SavingsGoal.user_id == current_user.id
+        )
+        .all()
+    )
+
     insights = generate_financial_insights(
         incomes,
         expenses,
     )
 
     return generate_action_plan(
-        insights
+        insights,
+        goals,
     )
