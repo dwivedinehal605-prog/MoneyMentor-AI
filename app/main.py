@@ -43,7 +43,7 @@ from app.api.spending_coach import router as spending_coach_router
 from app.api.financial_action_plan import router as financial_action_plan_router
 from app.api.goal_priority import router as goal_priority_router
 from app.api.goal_allocation import router as goal_allocation_router
-
+from app.api.goal_forecast import router as goal_forecast_router
 # Database
 from app.database.database import Base, engine
 
@@ -121,6 +121,7 @@ app.include_router(spending_coach_router)
 app.include_router(financial_action_plan_router)
 app.include_router(goal_priority_router)
 app.include_router(goal_allocation_router)
+app.include_router(goal_forecast_router)
 
 # ==========================
 # Create Database Tables
