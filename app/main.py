@@ -46,6 +46,7 @@ from app.api.goal_allocation import router as goal_allocation_router
 from app.api.goal_forecast import router as goal_forecast_router
 from app.api.budget_performance import router as budget_performance_router
 from app.api.budget_alert import router as budget_alert_router
+from app.api.budget_recommendation import router as budget_recommendation_router
 
 # Database
 from app.database.database import Base, engine
@@ -127,6 +128,7 @@ app.include_router(goal_allocation_router)
 app.include_router(goal_forecast_router)
 app.include_router(budget_performance_router)
 app.include_router(budget_alert_router)
+app.include_router(budget_recommendation_router)
 
 # ==========================
 # Create Database Tables
