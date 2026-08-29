@@ -68,8 +68,9 @@ def get_notifications(
                     {
                         "type": "Budget Alert",
                         "message": (
-                            "You have exceeded your "
-                            "monthly budget."
+                            "Your expenses have exceeded the allocated budget. "
+                            "Immediate adjustments may be required to prevent "
+                            "further overspending and maintain financial stability."
                         ),
                     }
                 )
@@ -82,8 +83,8 @@ def get_notifications(
                     {
                         "type": "Budget Warning",
                         "message": (
-                            "You have used more than "
-                            "80% of your monthly budget."
+                            "You have already utilized over 80% of your budget. "
+                            "Monitor upcoming expenses carefully to avoid overspending."
                         ),
                     }
                 )
@@ -114,8 +115,6 @@ def get_notifications(
             key=lambda expense: expense.amount,
         )
 
-        # High expense threshold:
-        # 50% of total recorded expenses
         if (
             total_expense > 0
             and highest_expense.amount
@@ -124,13 +123,15 @@ def get_notifications(
 
             notifications.append(
                 {
-                    "type": "High Expense Alert",
+                    "type": "Large Transaction Alert",
                     "message": (
-                        f"Your largest expense was "
-                        f"₹{highest_expense.amount:.2f} "
-                        f"for '{highest_expense.title}'. "
-                        "Review this expense to maintain "
-                        "better spending control."
+                        f"A large transaction of "
+                        f"₹{highest_expense.amount:,.2f} "
+                        f"was recorded under "
+                        f"'{highest_expense.title}'. "
+                        "Verify that this expense aligns "
+                        "with your financial priorities "
+                        "and budget plan."
                     ),
                 }
             )
@@ -173,20 +174,18 @@ def get_notifications(
                 / previous_month
             ) * 100
 
-            # Alert when spending increases
-            # by more than 20%
-
             if change_percentage > 20:
 
                 notifications.append(
                     {
                         "type": "Spending Alert",
                         "message": (
-                            f"Your spending increased by "
-                            f"{change_percentage:.2f}% compared "
-                            "with the previous month. "
-                            "Consider reviewing your recent "
-                            "expenses."
+                            f"Your monthly spending rose from "
+                            f"₹{previous_month:,.2f} to "
+                            f"₹{current_month:,.2f}. "
+                            "Consider reviewing recent purchases "
+                            "and identifying opportunities to reduce "
+                            "discretionary expenses."
                         ),
                     }
                 )
@@ -235,9 +234,10 @@ def get_notifications(
                 {
                     "type": "Goal Completed",
                     "message": (
-                        f"Congratulations! You have "
+                        f"Congratulations! You have successfully "
                         f"achieved your savings goal "
-                        f"'{goal.title}'."
+                        f"'{goal.title}'. "
+                        "Keep up the excellent financial discipline."
                     ),
                 }
             )
@@ -248,9 +248,9 @@ def get_notifications(
                 {
                     "type": "Goal Progress",
                     "message": (
-                        f"You have completed "
-                        f"{progress:.2f}% of your "
-                        f"savings goal '{goal.title}'."
+                        f"You are {progress:.2f}% of the way toward "
+                        f"your savings goal '{goal.title}'. "
+                        "The finish line is within reach."
                     ),
                 }
             )
@@ -261,9 +261,11 @@ def get_notifications(
                 {
                     "type": "Goal Progress",
                     "message": (
-                        f"You have saved "
-                        f"{progress:.2f}% of your "
-                        f"savings goal '{goal.title}'."
+                        f"You have achieved {progress:.2f}% progress "
+                        f"toward your savings goal "
+                        f"'{goal.title}'. "
+                        "Consistent contributions will help you "
+                        "reach your target faster."
                     ),
                 }
             )
@@ -278,9 +280,8 @@ def get_notifications(
             {
                 "type": "Financial Update",
                 "message": (
-                    "Your finances are currently "
-                    "on track. Keep monitoring your "
-                    "spending and savings."
+                    "Everything looks good. Your finances are currently stable. "
+                    "Continue maintaining healthy spending and saving habits."
                 ),
             }
         )
