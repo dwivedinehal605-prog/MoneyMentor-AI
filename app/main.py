@@ -47,6 +47,7 @@ from app.api.goal_forecast import router as goal_forecast_router
 from app.api.budget_performance import router as budget_performance_router
 from app.api.budget_alert import router as budget_alert_router
 from app.api.budget_recommendation import router as budget_recommendation_router
+from app.api.recurring_transaction import router as recurring_transaction_router
 
 # Database
 from app.database.database import Base, engine
@@ -57,6 +58,10 @@ from app.models.expense import Expense
 from app.models.income import Income
 from app.models.budget import Budget
 from app.models.savings_goal import SavingsGoal
+from app.models.recurring_transaction import RecurringTransaction
+
+# Create tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="MoneyMentor AI",
@@ -100,7 +105,6 @@ app.include_router(spending_insight_router)
 app.include_router(spending_distribution_router)
 app.include_router(monthly_comparison_router)
 app.include_router(savings_rate_trend_router )
-app.include_router(savings_rate_trend_router)
 app.include_router(expense_frequency_router)
 app.include_router(expense_income_ratio_router)
 app.include_router(monthly_savings_router)
@@ -129,6 +133,7 @@ app.include_router(goal_forecast_router)
 app.include_router(budget_performance_router)
 app.include_router(budget_alert_router)
 app.include_router(budget_recommendation_router)
+app.include_router(recurring_transaction_router)
 
 # ==========================
 # Create Database Tables
