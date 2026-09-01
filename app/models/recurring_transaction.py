@@ -59,3 +59,8 @@ class RecurringTransaction(Base):
         DateTime(timezone=True),
         server_default=func.now(),
     )
+
+    next_due_date = Column(
+    DateTime,
+    nullable=False,
+   )

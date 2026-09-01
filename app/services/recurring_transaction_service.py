@@ -15,13 +15,14 @@ def create_recurring_transaction(
     data: RecurringTransactionCreate,
 ):
     transaction = RecurringTransaction(
-        user_id=user_id,
-        title=data.title,
-        amount=data.amount,
-        category=data.category,
-        transaction_type=data.transaction_type,
-        frequency=data.frequency,
-    )
+    user_id=user_id,
+    title=data.title,
+    amount=data.amount,
+    category=data.category,
+    transaction_type=data.transaction_type,
+    frequency=data.frequency,
+    next_due_date=data.next_due_date,
+)
 
     db.add(transaction)
     db.commit()

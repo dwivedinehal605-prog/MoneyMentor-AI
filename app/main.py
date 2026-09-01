@@ -48,6 +48,7 @@ from app.api.budget_performance import router as budget_performance_router
 from app.api.budget_alert import router as budget_alert_router
 from app.api.budget_recommendation import router as budget_recommendation_router
 from app.api.recurring_transaction import router as recurring_transaction_router
+from app.api.payment_reminder import router as payment_reminder_router
 
 # Database
 from app.database.database import Base, engine
@@ -134,6 +135,7 @@ app.include_router(budget_performance_router)
 app.include_router(budget_alert_router)
 app.include_router(budget_recommendation_router)
 app.include_router(recurring_transaction_router)
+app.include_router(payment_reminder_router)
 
 # ==========================
 # Create Database Tables
