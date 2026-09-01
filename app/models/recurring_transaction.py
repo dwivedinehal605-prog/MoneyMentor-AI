@@ -6,6 +6,7 @@ from sqlalchemy import Boolean
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy import Date
 
 from app.database.database import Base
 
@@ -61,6 +62,6 @@ class RecurringTransaction(Base):
     )
 
     next_due_date = Column(
-    DateTime,
-    nullable=False,
-   )
+        Date,
+        nullable=False,
+    )
