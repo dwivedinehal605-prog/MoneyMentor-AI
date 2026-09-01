@@ -11,16 +11,8 @@ from app.dependencies.auth import (
 
 from app.models.user import User
 
-from app.models.savings_goal import (
-    SavingsGoal,
-)
-
-from app.schemas.goal_forecast import (
-    GoalForecastResponse,
-)
-
 from app.services.goal_forecast_service import (
-    generate_goal_forecast,
+    get_goal_forecast,
 )
 
 router = APIRouter(
@@ -29,29 +21,14 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "/",
-    response_model=GoalForecastResponse,
-)
+@router.get("/")
 def goal_forecast(
     db: Session = Depends(get_db),
     current_user: User = Depends(
         get_current_user
     ),
 ):
-
-    goals = (
-        db.query(SavingsGoal)
-        .filter(
-            SavingsGoal.user_id
-            == current_user.id
-        )
-        .all()
-    )
-
-    monthly_savings_capacity = 10000
-
-    return generate_goal_forecast(
-        goals,
-        monthly_savings_capacity,
+    return get_goal_forecast(
+        db=db,
+        user_id=current_user.id,
     )
