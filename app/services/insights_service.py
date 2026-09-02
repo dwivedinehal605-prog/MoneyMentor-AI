@@ -21,11 +21,24 @@ def generate_financial_insights(incomes, expenses):
 
     savings = total_income - total_expense
 
-    savings_rate = (
-        (savings / total_income) * 100
-        if total_income > 0
-        else 0
-    )
+    if total_income > 0:
+
+        savings_rate = (
+            savings
+            / total_income
+        ) * 100
+
+        savings_rate = max(
+            min(
+                savings_rate,
+                100,
+           ),
+           -100,
+       )
+
+    else:
+
+        savings_rate = 0
 
     # --------------------------------
     # Category-wise Expense Analysis
@@ -107,35 +120,49 @@ def generate_financial_insights(incomes, expenses):
     # --------------------------------
     # Financial Health Score
     # --------------------------------
+    
+    financial_health_score = 0
 
-    if total_income <= 0:
+    if total_income > 0:
 
-        financial_health_score = 20
+        if savings_rate >= 40:
+            financial_health_score += 50
 
-    elif savings < 0:
+        elif savings_rate >= 30:
+            financial_health_score += 40
 
-        financial_health_score = 25
+        elif savings_rate >= 20:
+            financial_health_score += 30
 
-    elif savings_rate >= 40:
+        elif savings_rate >= 10:
+            financial_health_score += 20
 
-        financial_health_score = 95
+        else:
+            financial_health_score += 10
 
-    elif savings_rate >= 30:
+    if highest_category_amount > 0:
 
-        financial_health_score = 85
+        if category_percentage <= 25:
+            financial_health_score += 30
 
-    elif savings_rate >= 20:
+        elif category_percentage <= 40:
+            financial_health_score += 20
 
-        financial_health_score = 70
+        else:
+            financial_health_score += 10
 
-    elif savings_rate >= 10:
-
-        financial_health_score = 55
+    if monthly_trend == "Decreasing":
+        financial_health_score += 20
+    elif monthly_trend == "Stable":
+        financial_health_score += 15
 
     else:
+        financial_health_score += 10
 
-        financial_health_score = 35
-
+    financial_health_score = min(
+        financial_health_score,
+        100,
+    )
     # --------------------------------
     # Health Status
     # --------------------------------
