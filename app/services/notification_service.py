@@ -1,6 +1,6 @@
 from collections import defaultdict
+from datetime import datetime
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.expense import Expense
@@ -14,83 +14,11 @@ def get_notifications(
 ):
     notifications = []
 
-    # =====================================
-    # Total Expense
-    # =====================================
-
-    total_expense = (
-        db.query(
-            func.coalesce(
-                func.sum(Expense.amount),
-                0,
-            )
-        )
-        .filter(
-            Expense.user_id == user_id
-        )
-        .scalar()
-    )
-
-    total_expense = float(
-        total_expense or 0
-    )
+    current_month = datetime.now().month
+    current_year = datetime.now().year
 
     # =====================================
-    # Latest Budget
-    # =====================================
-
-    budget = (
-        db.query(Budget)
-        .filter(
-            Budget.user_id == user_id
-        )
-        .order_by(
-            Budget.id.desc()
-        )
-        .first()
-    )
-
-    # =====================================
-    # Budget Notifications
-    # =====================================
-
-    if budget:
-
-        budget_amount = float(
-            budget.budget_amount or 0
-        )
-
-        if budget_amount > 0:
-
-            if total_expense > budget_amount:
-
-                notifications.append(
-                    {
-                        "type": "Budget Alert",
-                        "message": (
-                            "Your expenses have exceeded the allocated budget. "
-                            "Immediate adjustments may be required to prevent "
-                            "further overspending and maintain financial stability."
-                        ),
-                    }
-                )
-
-            elif total_expense >= (
-                budget_amount * 0.8
-            ):
-
-                notifications.append(
-                    {
-                        "type": "Budget Warning",
-                        "message": (
-                            "You have already utilized over 80% of your budget. "
-                            "Monitor upcoming expenses carefully to avoid overspending."
-                        ),
-                    }
-                )
-
-    # =====================================
-    # Expense Records
+    # Fetch Expenses
     # =====================================
 
     expenses = (
@@ -104,34 +32,104 @@ def get_notifications(
         .all()
     )
 
+    total_expense = sum(
+        expense.amount
+        for expense in expenses
+    )
+
     # =====================================
-    # High Expense Notification
+    # Current Month Expense
     # =====================================
 
-    if expenses:
+    current_month_expense = sum(
+        expense.amount
+        for expense in expenses
+        if (
+            expense.created_at.month
+            == current_month
+            and expense.created_at.year
+            == current_year
+        )
+    )
 
-        highest_expense = max(
+    # =====================================
+    # Budget Monitoring
+    # =====================================
+
+    budget = (
+        db.query(Budget)
+        .filter(
+            Budget.user_id == user_id,
+            Budget.month == current_month,
+            Budget.year == current_year,
+        )
+        .first()
+    )
+
+    if budget:
+
+        budget_amount = float(
+            budget.budget_amount
+        )
+
+        if budget_amount > 0:
+
+            usage_percentage = (
+                current_month_expense
+                / budget_amount
+            ) * 100
+
+            if usage_percentage > 100:
+
+                notifications.append(
+                    {
+                        "priority": "high",
+                        "type": "Budget Alert",
+                        "message": (
+                            f"You have exceeded your monthly budget "
+                            f"by {usage_percentage - 100:.2f}%."
+                        ),
+                    }
+                )
+
+            elif usage_percentage >= 80:
+
+                notifications.append(
+                    {
+                        "priority": "medium",
+                        "type": "Budget Warning",
+                        "message": (
+                            f"You have already used "
+                            f"{usage_percentage:.2f}% "
+                            f"of your monthly budget."
+                        ),
+                    }
+                )
+
+    # =====================================
+    # Large Transaction Alert
+    # =====================================
+
+    if expenses and total_expense > 0:
+
+        largest_expense = max(
             expenses,
-            key=lambda expense: expense.amount,
+            key=lambda x: x.amount,
         )
 
         if (
-            total_expense > 0
-            and highest_expense.amount
-            >= total_expense * 0.5
+            largest_expense.amount
+            >= total_expense * 0.30
         ):
 
             notifications.append(
                 {
-                    "type": "Large Transaction Alert",
+                    "priority": "high",
+                    "type": "Large Transaction",
                     "message": (
-                        f"A large transaction of "
-                        f"₹{highest_expense.amount:,.2f} "
-                        f"was recorded under "
-                        f"'{highest_expense.title}'. "
-                        "Verify that this expense aligns "
-                        "with your financial priorities "
-                        "and budget plan."
+                        f"Large expense detected: "
+                        f"₹{largest_expense.amount:,.2f} "
+                        f"for '{largest_expense.title}'."
                     ),
                 }
             )
@@ -144,11 +142,15 @@ def get_notifications(
 
     for expense in expenses:
 
-        month = expense.created_at.strftime(
-            "%Y-%m"
+        month_key = (
+            expense.created_at.strftime(
+                "%Y-%m"
+            )
         )
 
-        monthly_totals[month] += expense.amount
+        monthly_totals[
+            month_key
+        ] += expense.amount
 
     months = sorted(
         monthly_totals.keys()
@@ -156,88 +158,80 @@ def get_notifications(
 
     if len(months) >= 2:
 
-        previous_month = monthly_totals[
-            months[-2]
-        ]
+        previous_month_total = (
+            monthly_totals[
+                months[-2]
+            ]
+        )
 
-        current_month = monthly_totals[
-            months[-1]
-        ]
+        current_month_total = (
+            monthly_totals[
+                months[-1]
+            ]
+        )
 
-        if previous_month > 0:
+        increase_amount = (
+            current_month_total
+            - previous_month_total
+        )
 
-            change_percentage = (
-                (
-                    current_month
-                    - previous_month
-                )
-                / previous_month
+        if (
+            previous_month_total > 0
+            and increase_amount > 0
+        ):
+
+            growth_percentage = (
+                increase_amount
+                / previous_month_total
             ) * 100
 
-            if change_percentage > 20:
+            if growth_percentage > 20:
 
                 notifications.append(
                     {
-                        "type": "Spending Alert",
+                        "priority": "medium",
+                        "type": "Spending Trend",
                         "message": (
-                            f"Your monthly spending rose from "
-                            f"₹{previous_month:,.2f} to "
-                            f"₹{current_month:,.2f}. "
-                            "Consider reviewing recent purchases "
-                            "and identifying opportunities to reduce "
-                            "discretionary expenses."
+                            f"Monthly spending increased by "
+                            f"₹{increase_amount:,.2f} "
+                            f"compared to last month."
                         ),
                     }
                 )
 
     # =====================================
-    # Latest Savings Goal
+    # Savings Goal Progress
     # =====================================
 
-    goal = (
+    goals = (
         db.query(SavingsGoal)
         .filter(
-            SavingsGoal.user_id == user_id
+            SavingsGoal.user_id
+            == user_id
         )
-        .order_by(
-            SavingsGoal.id.desc()
-        )
-        .first()
+        .all()
     )
 
-    # =====================================
-    # Savings Goal Notifications
-    # =====================================
+    for goal in goals:
 
-    if goal:
+        if goal.target_amount <= 0:
+            continue
 
-        target_amount = float(
-            goal.target_amount or 0
-        )
-
-        saved_amount = float(
-            goal.saved_amount or 0
-        )
-
-        progress = 0
-
-        if target_amount > 0:
-
-            progress = (
-                saved_amount
-                / target_amount
-            ) * 100
+        progress = (
+            goal.saved_amount
+            / goal.target_amount
+        ) * 100
 
         if progress >= 100:
 
             notifications.append(
                 {
+                    "priority": "high",
                     "type": "Goal Completed",
                     "message": (
-                        f"Congratulations! You have successfully "
-                        f"achieved your savings goal "
-                        f"'{goal.title}'. "
-                        "Keep up the excellent financial discipline."
+                        f"Congratulations! "
+                        f"'{goal.title}' "
+                        f"has been achieved."
                     ),
                 }
             )
@@ -246,11 +240,11 @@ def get_notifications(
 
             notifications.append(
                 {
+                    "priority": "medium",
                     "type": "Goal Progress",
                     "message": (
-                        f"You are {progress:.2f}% of the way toward "
-                        f"your savings goal '{goal.title}'. "
-                        "The finish line is within reach."
+                        f"'{goal.title}' is "
+                        f"{progress:.2f}% complete."
                     ),
                 }
             )
@@ -259,37 +253,57 @@ def get_notifications(
 
             notifications.append(
                 {
+                    "priority": "low",
                     "type": "Goal Progress",
                     "message": (
-                        f"You have achieved {progress:.2f}% progress "
-                        f"toward your savings goal "
-                        f"'{goal.title}'. "
-                        "Consistent contributions will help you "
-                        "reach your target faster."
+                        f"'{goal.title}' is "
+                        f"{progress:.2f}% complete."
                     ),
                 }
             )
 
     # =====================================
-    # No Notifications
+    # Default Notification
     # =====================================
 
     if not notifications:
 
         notifications.append(
             {
+                "priority": "low",
                 "type": "Financial Update",
                 "message": (
-                    "Everything looks good. Your finances are currently stable. "
-                    "Continue maintaining healthy spending and saving habits."
+                    "Everything looks good. "
+                    "Your finances are stable."
                 ),
             }
         )
+
+    # =====================================
+    # Sort Notifications
+    # =====================================
+
+    priority_order = {
+        "high": 1,
+        "medium": 2,
+        "low": 3,
+    }
+
+    notifications = sorted(
+        notifications,
+        key=lambda item:
+        priority_order[
+            item["priority"]
+        ],
+    )
 
     # =====================================
     # Final Response
     # =====================================
 
     return {
-        "notifications": notifications
+        "total_notifications": len(
+            notifications
+        ),
+        "notifications": notifications,
     }
