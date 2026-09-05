@@ -10,36 +10,31 @@ def generate_dashboard_summary(
     Generate dashboard analytics for frontend.
     """
 
-    # --------------------------------
+    # ==================================
     # Category-wise Analysis
-    # --------------------------------
+    # ==================================
 
     category_totals = defaultdict(float)
 
     for expense in expenses:
 
         category = (
-            expense.category
+            expense.category.title()
             if expense.category
             else "Other"
         )
 
-        category_totals[
-            category
-        ] += expense.amount
+        category_totals[category] += expense.amount
 
-    # --------------------------------
+    # ==================================
     # Top Categories
-    # --------------------------------
+    # ==================================
 
     top_categories = sorted(
         [
             {
                 "category": category,
-                "amount": round(
-                    amount,
-                    2,
-                ),
+                "amount": round(amount, 2),
             }
             for category, amount
             in category_totals.items()
@@ -48,9 +43,9 @@ def generate_dashboard_summary(
         reverse=True,
     )[:5]
 
-    # --------------------------------
+    # ==================================
     # Category Distribution
-    # --------------------------------
+    # ==================================
 
     total_expense = insights.get(
         "total_expense",
@@ -63,15 +58,15 @@ def generate_dashboard_summary(
 
         for category, amount in category_totals.items():
 
+            percentage = (
+                amount / total_expense
+            ) * 100
+
             category_distribution.append(
                 {
                     "category": category,
                     "percentage": round(
-                        (
-                            amount
-                            / total_expense
-                        )
-                        * 100,
+                        percentage,
                         2,
                     ),
                 }
@@ -83,9 +78,9 @@ def generate_dashboard_summary(
         reverse=True,
     )
 
-    # --------------------------------
-    # Dashboard Statistics
-    # --------------------------------
+    # ==================================
+    # Statistics
+    # ==================================
 
     total_transactions = (
         len(incomes)
@@ -97,25 +92,25 @@ def generate_dashboard_summary(
     )
 
     average_expense = (
-        total_expense
-        / len(expenses)
-        if expenses
+        total_expense / len(expenses)
+        if len(expenses) > 0
         else 0
+    )
+
+    total_income = insights.get(
+        "total_income",
+        0,
     )
 
     average_income = (
-        insights.get(
-            "total_income",
-            0,
-        )
-        / len(incomes)
-        if incomes
+        total_income / len(incomes)
+        if len(incomes) > 0
         else 0
     )
 
-    # --------------------------------
+    # ==================================
     # Largest Expense
-    # --------------------------------
+    # ==================================
 
     largest_expense = None
 
@@ -132,13 +127,17 @@ def generate_dashboard_summary(
                 expense.amount,
                 2,
             ),
-            "category": expense.category,
+            "category": (
+                expense.category.title()
+                if expense.category
+                else "Other"
+            ),
             "created_at": expense.created_at,
         }
 
-    # --------------------------------
+    # ==================================
     # Recent Expenses
-    # --------------------------------
+    # ==================================
 
     recent_expenses = sorted(
         expenses,
@@ -153,15 +152,19 @@ def generate_dashboard_summary(
                 expense.amount,
                 2,
             ),
-            "category": expense.category,
+            "category": (
+                expense.category.title()
+                if expense.category
+                else "Other"
+            ),
             "created_at": expense.created_at,
         }
         for expense in recent_expenses
     ]
 
-    # --------------------------------
+    # ==================================
     # Recent Incomes
-    # --------------------------------
+    # ==================================
 
     recent_incomes = sorted(
         incomes,
@@ -181,59 +184,44 @@ def generate_dashboard_summary(
         for income in recent_incomes
     ]
 
-    # --------------------------------
+    # ==================================
     # Expense Chart Data
-    # --------------------------------
-
-    expense_chart = [
-        {
-            "label": category,
-            "value": round(
-                amount,
-                2,
-            ),
-        }
-        for category, amount
-        in category_totals.items()
-    ]
+    # ==================================
 
     expense_chart = sorted(
-        expense_chart,
+        [
+            {
+                "label": category,
+                "value": round(
+                    amount,
+                    2,
+                ),
+            }
+            for category, amount
+            in category_totals.items()
+        ],
         key=lambda x: x["value"],
         reverse=True,
     )
 
-    # --------------------------------
+    # ==================================
     # Final Dashboard Response
-    # --------------------------------
+    # ==================================
 
     return {
         "total_income": round(
-            insights.get(
-                "total_income",
-                0,
-            ),
+            total_income,
             2,
         ),
 
         "total_expense": round(
-            insights.get(
-                "total_expense",
-                0,
-            ),
+            total_expense,
             2,
         ),
 
         "balance": round(
-            insights.get(
-                "total_income",
-                0,
-            )
-            -
-            insights.get(
-                "total_expense",
-                0,
-            ),
+            total_income
+            - total_expense,
             2,
         ),
 

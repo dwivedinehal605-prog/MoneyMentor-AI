@@ -53,6 +53,7 @@ from app.api.savings_goal_progress import router as savings_goal_progress_router
 from app.api.goal_forecast import router as goal_forecast_router
 from app.api.financial_health import router as financial_health_router
 from app.api.advisor import router as advisor_router
+from app.api.goal_analytics import router as goal_analytics_router
 
 # Database
 from app.database.database import Base, engine
@@ -144,6 +145,7 @@ app.include_router(savings_goal_progress_router)
 app.include_router(goal_forecast_router)
 app.include_router(financial_health_router)
 app.include_router(advisor_router)
+app.include_router(goal_analytics_router)
 
 # ==========================
 # Create Database Tables
