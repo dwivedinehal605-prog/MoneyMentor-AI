@@ -1,12 +1,16 @@
 from pydantic import BaseModel
-from typing import List
 
 
-class GoalAllocation(BaseModel):
+class GoalAllocationItem(BaseModel):
     goal: str
-    allocation: float
+    remaining_amount: float
+    monthly_required: float
+    recommended_allocation: float
+    funding_status: str
 
 
 class GoalAllocationResponse(BaseModel):
     monthly_savings_capacity: float
-    allocations: List[GoalAllocation]
+    total_allocated: float
+    remaining_capacity: float
+    allocations: list[GoalAllocationItem]

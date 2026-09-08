@@ -1,3 +1,6 @@
+from datetime import date
+
+
 PRIORITY_MAP = {
     "emergency fund": 100,
     "education": 90,
@@ -20,6 +23,8 @@ def generate_goal_allocation(
 
         return {
             "monthly_savings_capacity": 0,
+            "total_allocated": 0,
+            "remaining_capacity": 0,
             "allocations": [],
         }
 
@@ -29,41 +34,135 @@ def generate_goal_allocation(
 
     for goal in goals:
 
-        score = PRIORITY_MAP.get(
+        if goal.saved_amount >= goal.target_amount:
+            continue
+
+        remaining_amount = (
+            goal.target_amount
+            - goal.saved_amount
+        )
+
+        days_left = max(
+            (
+                goal.deadline
+                - date.today()
+            ).days,
+            1,
+        )
+
+        months_left = max(
+            days_left / 30,
+            1,
+        )
+
+        monthly_required = (
+            remaining_amount
+            / months_left
+        )
+
+        title_priority = PRIORITY_MAP.get(
             goal.title.lower(),
             50,
         )
 
-        scored_goals.append(
-            (goal, score)
+        urgency_score = (
+            monthly_required / 1000
         )
 
-        total_score += score
+        progress_score = (
+            100
+            -
+            (
+                goal.saved_amount
+                /
+                goal.target_amount
+            )
+            * 100
+        )
+
+        final_score = (
+            title_priority
+            + urgency_score
+            + progress_score
+        )
+
+        total_score += final_score
+
+        scored_goals.append(
+            {
+                "goal": goal,
+                "score": final_score,
+                "monthly_required":
+                monthly_required,
+                "remaining_amount":
+                remaining_amount,
+            }
+        )
 
     allocations = []
 
-    for goal, score in scored_goals:
+    allocated_total = 0
+
+    for item in scored_goals:
 
         allocation = round(
             (
-                score /
-                total_score
+                item["score"]
+                / total_score
             )
-            *
-            monthly_savings_capacity,
+            * monthly_savings_capacity,
             2,
         )
 
+        allocated_total += allocation
+
         allocations.append(
             {
-                "goal": goal.title,
-                "allocation": allocation,
+                "goal":
+                item["goal"].title,
+
+                "remaining_amount":
+                round(
+                    item["remaining_amount"],
+                    2,
+                ),
+
+                "monthly_required":
+                round(
+                    item["monthly_required"],
+                    2,
+                ),
+
+                "recommended_allocation":
+                allocation,
+
+                "funding_status":
+                (
+                    "On Track"
+                    if allocation
+                    >= item["monthly_required"]
+                    else "Needs More Funding"
+                ),
             }
         )
 
     return {
         "monthly_savings_capacity":
         monthly_savings_capacity,
+
+        "total_allocated":
+        round(
+            allocated_total,
+            2,
+        ),
+
+        "remaining_capacity":
+        round(
+            monthly_savings_capacity
+            - allocated_total,
+            2,
+        ),
+
         "allocations":
         allocations,
     }
