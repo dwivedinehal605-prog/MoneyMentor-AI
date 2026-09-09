@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import List
+
 from pydantic import BaseModel
 
 
@@ -16,11 +18,13 @@ class RecentExpense(BaseModel):
     title: str
     amount: float
     category: str
+    created_at: datetime
 
 
 class RecentIncome(BaseModel):
     source: str
     amount: float
+    created_at: datetime
 
 
 class LargestExpense(BaseModel):
@@ -32,6 +36,8 @@ class LargestExpense(BaseModel):
 class DashboardSummary(BaseModel):
     total_income: float
     total_expense: float
+    balance: float
+
     savings: float
     savings_rate: float
 
